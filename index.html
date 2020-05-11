@@ -1,0 +1,116 @@
+<html>
+<head>
+  <title>US Military Bases</title>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+  <link rel="stylesheet" href="MarkerCluster.css" />
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"/>
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+  <link rel="stylesheet" href="leaflet.zoomhome.css"/>
+  <script src="leaflet.zoomhome.min.js"></script>
+  <script src="leaflet.markercluster.js"></script>
+  <script src="jquery-3.5.0.min.js"></script>
+  <style>
+    html, body, #map {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+    }
+    /*Legend*/
+    .legend {
+	    	position:absolute;
+	    	bottom:20px;
+	    	right:10px;
+	    	line-height: 18px;
+	    	color: #555;
+	    	border-radius: 10px;
+	    	background: rgba(255,255,255,0.8);
+	    	box-shadow: 0 0 15px rgba(0,0,0,0.2);
+	    	border-radius: 5px;
+	    	padding:10px;
+	    	width:100px;
+	    	font: 14px/16px Arial, Helvetica, sans-serif;
+	    	line-height: 18px;
+	    	color: #555;
+	    	}
+	.legend i {
+	        width: 18px;
+	        height: 18px;
+	        float: left;
+	        margin-right: 8px;
+	        opacity: 0.7;
+	    	}
+    </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="map-wrapper">
+    <div id="map"></div>
+    <div class="legend">
+      <div><strong>LEGEND</strong></div>
+      <i style="background:#ff7800;opacity:0.5"></i>
+      Base Area
+      <i style="background:#24292e;opacity:0.5"></i>
+      Country with >1K US Troops
+      <br>
+    </div>
+  </div>  
+
+  <script>
+
+  // initialize the map                                                     
+  var map = L.map('map').setView([0, 0], 2);
+
+  // load a tile layer
+  L.tileLayer('https://api.maptiler.com/maps/toner/{z}/{x}/{y}.png?key=XnPHp55kxMHWbVc3q0BT',
+    {
+      attribution: '<a>Pilbeamaps 2020 </a><a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+      maxZoom: 17,
+      minZoom: 1
+    }).addTo(map);
+
+//basearea
+  var myStyle = {
+    "color": "#ff7800",
+    "weight": 1,
+    "opacity": 0.65
+};
+  $.getJSON("basearea.geojson",function(basearea){
+  L.geoJson( basearea, {
+    style: myStyle
+  } ).addTo(map);
+}); 
+
+  //militarypresence
+  var mpStyle = {
+    "color": "#24292e",
+    "weight": 5,
+    "opacity": 0.65
+  };
+  $.getJSON("militarypresence.geojson",function(militarypresence){
+  L.geoJson( militarypresence, {
+    style: mpStyle
+  }).addTo(map);
+});
+
+  //load geojson bases file
+  $.getJSON("militarybase.geojson", function (data) {
+      var ratIcon = L.icon({
+        iconUrl: 'rat.gif',
+        iconSize: [30, 20]
+      });
+      // add GeoJSON layer to the map once the file is loaded
+      var bases = L.geoJson(data, {
+        pointToLayer: function (feature, latlng) {
+          var marker = L.marker(latlng, { icon: ratIcon });
+          marker.bindPopup(feature.properties.COMPONENT + '<br/>' + feature.properties.SITE_NAME);
+          return marker;
+        }
+      });
+      var clusters = L.markerClusterGroup();
+      clusters.addLayer(bases);
+      map.addLayer(clusters);
+    });
+  </script>
+</body>
+</html>
